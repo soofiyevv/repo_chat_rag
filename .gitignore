@@ -2,6 +2,6 @@
 __pycache__/
 chroma_db/
 chunks.jsonl
-*_log.txt
+*_log*.txt
 eval/last_report.txt
 .env
