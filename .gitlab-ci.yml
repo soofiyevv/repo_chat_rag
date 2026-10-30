@@ -35,6 +35,8 @@ deploy:
     - pip install -q ansible-core
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - cp "$SSH_PRIVATE_KEY" ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+    - ssh-keyscan -T 15 -H "$SERVER_IP" >> ~/.ssh/known_hosts
+    - chmod 755 ansible
   script:
     - git archive --format=tar.gz -o /tmp/app.tar.gz HEAD
     - cd ansible
