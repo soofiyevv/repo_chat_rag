@@ -93,6 +93,7 @@ def health() -> dict:
         "embedding_model": model_config()["name"],
         "llm_model": chat.llm_model if chat else None,
         "chunks": len(chat.retriever.chunks) if chat else 0,
+        "repo": chat.retriever.chunks[0]["repo"] if chat and chat.retriever.chunks else None,
     }
 
 
