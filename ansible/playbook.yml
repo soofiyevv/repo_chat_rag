@@ -8,7 +8,7 @@
     swap_size_mb: 4096
     repo_url: "{{ lookup('env', 'REPO_URL') | default('https://github.com/fastapi/full-stack-fastapi-template', true) }}"
     embed_model: "{{ lookup('env', 'EMBED_MODEL') | default('bge-m3', true) }}"
-    health_retries: 80
+    health_retries: 200
 
   tasks:
     - name: Check swap file
