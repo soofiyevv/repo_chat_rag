@@ -27,6 +27,10 @@ deploy:
   resource_group: production
   timeout: 45m
   before_script:
+    - |
+      for v in SERVER_IP SSH_PRIVATE_KEY GROQ_API_KEY TELEGRAM_BOT_TOKEN; do
+        if [ -z "$(printenv $v)" ]; then echo "CI/CD variable $v is not set"; exit 1; fi
+      done
     - apt-get update -qq && apt-get install -y -qq openssh-client git > /dev/null
     - pip install -q ansible-core
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
