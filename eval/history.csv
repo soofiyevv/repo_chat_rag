@@ -1,0 +1,8 @@
+date,model,k,n,hit@1,hit@k,mrr,note
+2026-10-30 13:18,intfloat/multilingual-e5-small,5,15,0.667,0.733,0.700,"baseline e5-small, no tests, no imports"
+2026-10-30 13:28,intfloat/multilingual-e5-small,5,15,0.667,0.733,0.700,[vector] e5-small
+2026-10-30 13:28,intfloat/multilingual-e5-small,5,15,0.200,0.333,0.267,[bm25]
+2026-10-30 13:28,intfloat/multilingual-e5-small,5,15,0.533,0.733,0.617,[hybrid]
+2026-10-30 13:31,intfloat/multilingual-e5-small,5,15,0.667,0.733,0.700,[vector] baseline
+2026-10-30 13:32,intfloat/multilingual-e5-base,5,15,0.667,0.933,0.789,[vector]
+2026-10-30 13:35,BAAI/bge-m3,5,15,0.533,1.000,0.713,[vector]
