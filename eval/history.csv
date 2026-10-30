@@ -6,3 +6,5 @@ date,model,k,n,hit@1,hit@k,mrr,note
 2026-10-30 13:31,intfloat/multilingual-e5-small,5,15,0.667,0.733,0.700,[vector] baseline
 2026-10-30 13:32,intfloat/multilingual-e5-base,5,15,0.667,0.933,0.789,[vector]
 2026-10-30 13:35,BAAI/bge-m3,5,15,0.533,1.000,0.713,[vector]
+2026-10-30 14:12,BAAI/bge-m3,5,35,0.657,0.971,0.787,[vector] 40 questions
+2026-10-30 14:54,BAAI/bge-m3,8,35,0.657,0.971,0.787,[vector] k=8

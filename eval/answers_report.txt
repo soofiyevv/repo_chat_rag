@@ -1,0 +1,117 @@
+tag: v2-lines__groq-gpt-oss-20b  embedding: (saved)  k=5  llm: (saved answers)  judge: groq:openai/gpt-oss-20b
+
+id   lang type      C  G  hit cite  comment
+q01  ru   locate    5  5  yes  yes  Answer correctly identifies the password check location and references the provided code.
+q02  en   explain   5  5  yes  yes  Good answer
+q03  ru   explain   4  5  yes  yes  Ответ покрывает основные детали, но упускает упоминание конкретных кодов ошибок.
+q04  en   locate    5  5  yes  yes  Answer correctly identifies the endpoint location and is fully supported by the provided code.
+q05  ru   explain   4  5  yes  yes  Good coverage of hashing logic
+q06  en   explain   3  5  yes  yes  Missing same-response detail
+q07  ru   locate    5  5  yes  yes  Answer correctly identifies the admin check and cites the relevant code.
+q08  en   explain   5  5  yes  yes  Answer fully matches reference facts and is fully supported by the code.
+q09  ru   explain   5  5  yes  yes  Answer accurately reflects the code.
+q10  en   explain   5  5  yes  yes  Answer accurately reflects the provided code and reference facts.
+q11  ru   locate    5  5  yes  yes  Answer correctly identifies deletion location and cites code.
+q12  en   explain   5  5  yes  yes  Answer accurately reflects the provided code.
+q13  ru   locate    5  5  yes  yes  Answer accurately describes password change via /me/password and reset flow, fully supported by provided code.
+q14  en   locate    5  5  yes  yes  Accurate and fully supported by the code.
+q15  ru   locate    4  5  yes  yes  Answer correctly identifies the User model as the table definition, with minor omission of inherited fields.
+q16  en   explain   4  5  yes  yes  Minor omission of default value
+q17  ru   explain   5  5  yes  yes  Answer correctly identifies HS256 as the signing algorithm.
+q18  en   explain   5  5  yes  yes  Answer correctly lists supported algorithms and is fully supported by the code.
+q19  ru   explain   5  5  yes  yes  Answer correctly describes rehashing on login.
+q20  en   explain   5  5  yes  yes  Answer accurately reflects the timing‑attack mitigation in authenticate.
+q21  ru   explain   5  5  yes  yes  Answer correctly states that a regular user cannot delete another's item and cites the relevant code.
+q22  en   explain   5  5  yes  yes  Answer accurately reflects the code behavior for regular users.
+q23  ru   explain   5  5  yes  yes  Answer correctly states that superusers cannot delete themselves and cites the relevant code.
+q24  en   explain   5  5  yes  yes  Answer correctly cites code.
+q25  ru   explain   4  5  yes  yes  Answer covers main checks but omits hashing and saving step.
+q26  en   locate    3  5  yes  yes  Partial correctness, missing /users prefix
+q27  ru   explain   5  5  yes  yes  Answer correctly identifies when the email is sent.
+q28  en   explain   5  5  yes  yes  Accurately reflects the code and reference facts.
+q29  ru   explain   5  5  yes  yes  Answer accurately reflects the code behavior and matches the reference facts.
+q30  en   explain   5  5  yes  yes  Accurate and fully supported by the provided code
+q31  ru   locate    3  5  yes  yes  Answer omitted mounting of api_router in app/main.py
+q32  en   explain   3  5  yes  yes  Answer omits the environment condition that limits the endpoint to development.
+q33  ru   explain   1  1   NO   NO  Answer incorrectly claims no CORS configuration exists.
+q34  en   explain   4  5  yes  yes  Missing default value
+q35  ru   locate    5  5  yes  yes  Answer accurately cites the rendering function and its usage.
+q36  en   negative  5  5    -    -  Answer correctly states no Stripe code exists.
+q37  ru   negative  5  5    -    -  Answer correctly states no S3 upload implementation.
+q38  en   negative  5  5    -    -  Answer correctly states no Redis caching is present.
+q39  ru   negative  5  5    -    -  Answer correctly states no Google login exists and is supported by code.
+
+ALL       n=39  correctness=4.54  groundedness=4.90  pass_rate=0.87  retrieval_hit=0.97  cites_expected=0.97  refusal_rate=1.00  latency_s=5.74
+LOCATE    n=10  correctness=4.50  groundedness=5.00  pass_rate=0.80  retrieval_hit=1.00  cites_expected=1.00  latency_s=6.13
+EXPLAIN   n=25  correctness=4.48  groundedness=4.84  pass_rate=0.88  retrieval_hit=0.96  cites_expected=0.96  latency_s=5.70
+NEGATIVE  n=4  correctness=5.00  groundedness=5.00  pass_rate=1.00  refusal_rate=1.00  latency_s=5.05
+RU        n=20  correctness=4.50  groundedness=4.80  pass_rate=0.90  retrieval_hit=0.94  cites_expected=0.94  refusal_rate=1.00  latency_s=5.98
+EN        n=19  correctness=4.58  groundedness=5.00  pass_rate=0.84  retrieval_hit=1.00  cites_expected=1.00  refusal_rate=1.00  latency_s=5.49
+
+FAILED ANSWERS
+
+--- q33 C=1 G=1  как настроен CORS?
+sources: config.py::Settings._use_psycopg_driver, config.py::Settings._enforce_non_default_secrets, config.py::<module>, login.py::reset_password, config.py::Settings.emails_enabled
+В предоставленных фрагментах кода нет настроек CORS — ни в `backend/app/core/config.py`, ни в других показанных файлах нет упоминаний о `CORSMiddleware`, заголовках `Access‑Control‑Allow‑*` или параметрах, связанных с CORS. Поэтому из текущих источников нельзя сказать, как настроен CORS.
+
+--- q06 C=3 G=5  how does password recovery by email work?
+sources: login.py::recover_password, utils.py::generate_reset_password_email, login.py::recover_password_html_content, utils.py::generate_password_reset_token, login.py::reset_password
+Password recovery is implemented as a three‑step flow:
+
+1. **Request a recovery link** – `recover_password` receives the user’s e‑mail, looks up the user and (only if it exists) creates a JWT‑based reset token and sends an e‑mail.  
+   * The endpoint is defined in `backend/app/api/routes/login.py:53‑74`【1†backend/app/api/routes/login.py:53-74】.  
+   * The token is generated by `generate_password_reset_token(email)` (`backend/app/utils.py:105‑115`)【4†backend/app/utils.py:105-115】.  
+   * The e‑mail content (subject and HTML body) is built by `generate_reset_password_email` (`backend/app/utils.py:70‑84`)【2†backend/app/utils.py:70-84】, which inserts the token into a link like `FRONTEND_HOST/reset‑password?token=…`.  
+   * The e‑mail is finally sent with `send_email(...)` (lines 67‑71 of the same function).
+
+2. **User clicks the link** – The front‑end opens the URL containing the token; the back‑end later validates it when the user submits a new password.
+
+3. **Reset the password** – `reset_password` receives the token and the new password, verifies the token with `verify_password_reset_token`, fetches the user, and updates the password.  
+   * This logic is in `backend/app/api/routes/login.py:77‑97`【5†backend/app/api/routes/login.py:77-97】.
+
+Thus, the recovery works by generating a time‑limited JWT token, emailing a link that contains that token, and then validating the token when the user posts the new password.
+
+--- q26 C=3 G=5  which endpoint returns the current user's profile?
+sources: users.py::read_user_me, deps.py::get_current_user, login.py::test_token, users.py::update_user_me, deps.py::get_current_active_superuser
+The endpoint that returns the current user’s profile is the **GET /me** route defined by `read_user_me`:
+
+- **File:** `backend/app/api/routes/users.py`  
+- **Lines:** 124‑129 – the function returns `current_user` (the authenticated user) as a `UserPublic` model.
+
+```python
+124| @router.get("/me", response_model=UserPublic)
+125| def read_user_me(current_user: CurrentUser) -> Any:
+126|     """
+127|     Get current user.
+128|     """
+129|     return current_user
+```
+
+Thus, a request to `GET /me` returns the current user’s profile. (A similar response is also provided by the test‑token endpoint, but the dedicated profile endpoint is `GET /me`.)
+
+--- q31 C=3 G=5  где подключаются все роутеры API?
+sources: utils.py::<module>, main.py::<module>, users.py::<module>, login.py::<module>, items.py::<module>
+Все роутеры подключаются в файле **backend/app/api/main.py** — в блоке, где создаётся `api_router` и вызываются `include_router` для каждого модуля:
+
+```python
+api_router = APIRouter()
+api_router.include_router(login.router)
+api_router.include_router(users.router)
+api_router.include_router(utils.router)
+api_router.include_router(items.router)
+if settings.FASTAPI_ENV == "development":
+    api_router.include_router(private.router)
+```  
+[2] backend/app/api/main.py:6-14
+
+--- q32 C=3 G=5  when is the private users endpoint available?
+sources: private.py::create_user, deps.py::get_current_user, private.py::<module>, users.py::update_user_me, users.py::read_user_me
+The **private users** endpoint is defined in the *private* router, which adds the prefix `/private` to all its routes.  
+The `create_user` handler is therefore reachable at:
+
+**POST `/private/users/`**  
+
+(see the router definition with its prefix `/private` [3] backend/app/api/routes/private.py:13, and the `create_user` route at `/users/` [1] backend/app/api/routes/private.py:23‑38).  
+
+So the endpoint is available whenever a request is made to the `/private/users/` path.
+

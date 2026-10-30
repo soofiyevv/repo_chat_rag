@@ -2,6 +2,7 @@
 Step 2c. Retrieval evaluation.
 
 Runs every question from eval/questions.jsonl through search and checks
+(negative questions without expected chunks are skipped here)
 whether one of the expected chunks (path::name) appears in the top-k results.
 
 Metrics:
@@ -65,6 +66,8 @@ def fmt(s: dict) -> str:
 def run(search_fn, questions: list[dict], k: int) -> list[dict]:
     rows = []
     for q in questions:
+        if not q["expected"]:
+            continue
         results = search_fn(q["question"], k)
         rank = first_hit_rank(results, q["expected"])
         top = f"{results[0]['path'].split('/')[-1]}::{results[0]['name']}" if results else "-"

@@ -37,16 +37,30 @@ You get numbered source chunks of code. Rules:
 - Answer only from the sources. If they do not contain the answer, say so plainly.
 - Point to the exact place: file path, line range and function or class name.
 - Cite sources inline as [n] path:start-end, for example [2] backend/app/crud.py:45-60.
+- Function code is shown with real line numbers ("45| code"). Cite exact lines only
+  from these numbers; otherwise cite the whole range from the source header.
+- Never invent file paths, line numbers, functions or behaviour that are not in the sources.
 - Explain briefly what the code does and how the pieces connect.
 - Answer in the same language as the question.
 - Keep it short: a few sentences, a short list if there are several places."""
+
+
+NUMBERED_KINDS = {"function", "method", "file"}
+
+
+def number_lines(c: dict) -> str:
+    if c["kind"] not in NUMBERED_KINDS:
+        return c["code"]
+    lines = c["code"].splitlines()
+    width = len(str(c["start_line"] + len(lines)))
+    return "\n".join(f"{c['start_line'] + i:>{width}}| {line}" for i, line in enumerate(lines))
 
 
 def build_context(chunks: list[dict]) -> str:
     blocks = []
     for i, c in enumerate(chunks, 1):
         header = f"[{i}] {c['path']}:{c['start_line']}-{c['end_line']}  {c['name']} ({c['kind']})"
-        blocks.append(f"{header}\n```python\n{c['code']}\n```")
+        blocks.append(f"{header}\n```python\n{number_lines(c)}\n```")
     return "\n\n".join(blocks)
 
 

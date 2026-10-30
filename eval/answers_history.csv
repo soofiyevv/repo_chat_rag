@@ -1,0 +1,5 @@
+date,tag,embedding,k,llm,judge,n,correctness,groundedness,pass_rate,retrieval_hit,cites_expected,refusal_rate,latency_s
+2026-10-30 14:00,baseline,bge-m3,5,openai/gpt-oss-120b,openai/gpt-oss-120b,5,4.400,5.000,1.000,1.000,1.000,,4.270
+2026-10-30 14:11,baseline,bge-m3,5,openai/gpt-oss-120b,openai/gpt-oss-120b,40,4.600,4.750,0.875,0.971,0.971,1.000,5.042
+2026-10-30 14:45,baseline__groq-gpt-oss-20b,(saved),5,(saved answers),groq:openai/gpt-oss-20b,40,4.700,4.800,0.925,0.971,0.971,1.000,5.042
+2026-10-30 14:53,v2-lines__groq-gpt-oss-20b,(saved),5,(saved answers),groq:openai/gpt-oss-20b,39,4.538,4.897,0.872,0.971,0.971,1.000,5.741
