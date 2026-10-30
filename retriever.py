@@ -13,6 +13,8 @@ createAccessToken -> create, access, token) before keyword matching.
 The two ranked lists are merged with Reciprocal Rank Fusion (RRF):
   score(chunk) = sum over lists of 1 / (RRF_K + rank)
 so a chunk ranked high by either method rises to the top.
+In vector mode the score is cosine similarity (0..1); in hybrid and bm25
+modes it is the RRF score.
 Test files are excluded unless include_tests=True.
 """
 from __future__ import annotations
@@ -118,16 +120,19 @@ class Retriever:
             except Exception:
                 raise SystemExit(f"No index for model '{self.cfg['key']}'. Run: python index.py --model {self.cfg['key']}")
 
-    def vector_ids(self, question: str, n: int) -> list[str]:
+    def vector_hits(self, question: str, n: int) -> list[tuple[str, float]]:
         self._load_vector()
         emb = self._model.encode([self.cfg["query"] + question], normalize_embeddings=True)
         res = self._collection.query(
             query_embeddings=emb.tolist(),
             n_results=n,
             where=None if self.include_tests else {"is_test": False},
-            include=[],
+            include=["distances"],
         )
-        return [i for i in res["ids"][0] if i in self.by_id]
+        return [(i, 1 - d) for i, d in zip(res["ids"][0], res["distances"][0]) if i in self.by_id]
+
+    def vector_ids(self, question: str, n: int) -> list[str]:
+        return [i for i, _ in self.vector_hits(question, n)]
 
     def bm25_ids(self, question: str, n: int) -> list[str]:
         scores = self.bm25.scores(tokenize(question))
@@ -136,8 +141,8 @@ class Retriever:
 
     def search(self, question: str, k: int = 5, mode: str = "hybrid") -> list[dict]:
         if mode == "vector":
-            lists = [self.vector_ids(question, k)]
-        elif mode == "bm25":
+            return [{**self.by_id[cid], "score": sim} for cid, sim in self.vector_hits(question, k)]
+        if mode == "bm25":
             lists = [self.bm25_ids(question, k)]
         else:
             lists = [self.vector_ids(question, CANDIDATES), self.bm25_ids(question, CANDIDATES)]

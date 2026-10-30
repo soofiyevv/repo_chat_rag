@@ -69,8 +69,8 @@ class RepoChat:
         self.k = k
         self.mode = mode
 
-    def ask(self, question: str) -> dict:
-        chunks = self.retriever.search(question, self.k, self.mode)
+    def ask(self, question: str, k: int | None = None) -> dict:
+        chunks = self.retriever.search(question, k or self.k, self.mode)
         response = self.client.chat.completions.create(
             model=self.llm_model,
             messages=build_messages(question, chunks),
