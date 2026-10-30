@@ -32,7 +32,7 @@ deploy:
         if [ -z "$(printenv $v)" ]; then echo "CI/CD variable $v is not set"; exit 1; fi
       done
     - apt-get update -qq && apt-get install -y -qq openssh-client git > /dev/null
-    - pip install -q ansible-core
+    - pip install -q "ansible-core~=2.18.0"
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - cp "$SSH_PRIVATE_KEY" ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
     - ssh-keyscan -T 15 -H "$SERVER_IP" >> ~/.ssh/known_hosts
