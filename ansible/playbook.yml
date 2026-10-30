@@ -1,0 +1,126 @@
+- name: Deploy Repo Chat (FastAPI + Telegram bot) with Docker Compose
+  hosts: all
+  become: true
+  vars:
+    app_dir: /opt/repo-chat
+    app_user: "{{ ansible_user | default('ubuntu') }}"
+    archive: "{{ lookup('env', 'APP_ARCHIVE') | default('/tmp/app.tar.gz', true) }}"
+    swap_size_mb: 4096
+    repo_url: "{{ lookup('env', 'REPO_URL') | default('https://github.com/fastapi/full-stack-fastapi-template', true) }}"
+    embed_model: "{{ lookup('env', 'EMBED_MODEL') | default('bge-m3', true) }}"
+    health_retries: 80
+
+  tasks:
+    - name: Check swap file
+      ansible.builtin.stat:
+        path: /swapfile
+      register: swapfile
+
+    - name: Create swap file
+      when: not swapfile.stat.exists
+      ansible.builtin.shell: |
+        fallocate -l {{ swap_size_mb }}M /swapfile
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
+        echo '/swapfile none swap sw 0 0' >> /etc/fstab
+      args:
+        creates: /swapfile
+
+    - name: Install packages for the Docker repository
+      ansible.builtin.apt:
+        name: [ca-certificates, curl, gnupg]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Add Docker GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Add Docker apt repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}
+          signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        filename: docker
+        state: present
+
+    - name: Install Docker Engine and Compose plugin
+      ansible.builtin.apt:
+        name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+        state: present
+        update_cache: true
+
+    - name: Start Docker
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Allow the app user to use Docker
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        groups: docker
+        append: true
+
+    - name: Remove old application code
+      ansible.builtin.file:
+        path: "{{ app_dir }}/app"
+        state: absent
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}/app"
+        state: directory
+        owner: "{{ app_user }}"
+        mode: "0755"
+
+    - name: Upload and unpack application code
+      ansible.builtin.unarchive:
+        src: "{{ archive }}"
+        dest: "{{ app_dir }}/app"
+        owner: "{{ app_user }}"
+
+    - name: Write .env with secrets
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/app/.env"
+        owner: "{{ app_user }}"
+        mode: "0600"
+        content: |
+          GROQ_API_KEY={{ lookup('env', 'GROQ_API_KEY') }}
+          GROQ_MODEL={{ lookup('env', 'GROQ_MODEL') | default('openai/gpt-oss-120b', true) }}
+          TELEGRAM_BOT_TOKEN={{ lookup('env', 'TELEGRAM_BOT_TOKEN') }}
+          API_TOKEN={{ lookup('env', 'API_TOKEN') }}
+          REPO_URL={{ repo_url }}
+          EMBED_MODEL={{ embed_model }}
+      no_log: true
+
+    - name: Build and start containers
+      ansible.builtin.command:
+        cmd: docker compose up -d --build --remove-orphans
+        chdir: "{{ app_dir }}/app"
+      environment:
+        REPO_URL: "{{ repo_url }}"
+        EMBED_MODEL: "{{ embed_model }}"
+      changed_when: true
+
+    - name: Wait for the API to become healthy (first start downloads the model)
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8000/health
+        return_content: true
+      register: health
+      until: health.status == 200 and (health.json.status | default('')) == 'ok'
+      retries: "{{ health_retries }}"
+      delay: 15
+
+    - name: Show health
+      ansible.builtin.debug:
+        msg: "{{ health.json }}"
+
+    - name: Remove unused Docker images
+      ansible.builtin.command: docker image prune -f
+      changed_when: false

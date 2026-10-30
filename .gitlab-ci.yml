@@ -1,0 +1,41 @@
+stages:
+  - test
+  - deploy
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+
+cache:
+  paths:
+    - .pip-cache
+
+lint-and-test:
+  stage: test
+  image: python:3.14-slim
+  script:
+    - pip install ruff pytest
+    - ruff check .
+    - pytest -q tests
+
+deploy:
+  stage: deploy
+  image: python:3.12-slim
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  environment:
+    name: production
+  resource_group: production
+  timeout: 45m
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq openssh-client git > /dev/null
+    - pip install -q ansible-core
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - cp "$SSH_PRIVATE_KEY" ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+  script:
+    - git archive --format=tar.gz -o /tmp/app.tar.gz HEAD
+    - cd ansible
+    - >
+      ansible-playbook playbook.yml
+      -i "$SERVER_IP,"
+      -u "${SERVER_USER:-ubuntu}"
+      --private-key ~/.ssh/id_deploy

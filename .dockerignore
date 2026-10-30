@@ -1,0 +1,9 @@
+.git
+.venv
+__pycache__
+chroma_db
+chunks.jsonl
+.env
+eval
+*_log*.txt
+docker-compose.override.yml

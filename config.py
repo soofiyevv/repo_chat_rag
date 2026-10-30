@@ -4,8 +4,8 @@ Shared settings for indexing, search and evaluation.
 MODELS          embedding models that can be compared; each one gets its own
                 Chroma collection, so switching models never mixes vectors
 DEFAULT_MODEL   used when --model is not given (or set EMBED_MODEL env var)
-DB_PATH         folder where Chroma stores the vector index
-CHUNKS_FILE     output of chunker.py
+DB_PATH         folder where Chroma stores the vector index (env DB_PATH)
+CHUNKS_FILE     output of chunker.py (env CHUNKS_FILE)
 
 e5 models expect "query: " / "passage: " prefixes; bge-m3 uses none.
 """
@@ -29,8 +29,8 @@ MODELS = {
 DEFAULT_MODEL = os.environ.get("EMBED_MODEL", "bge-m3")
 MAX_SEQ_LENGTH = 512
 
-DB_PATH = "chroma_db"
-CHUNKS_FILE = "chunks.jsonl"
+DB_PATH = os.getenv("DB_PATH", "chroma_db")
+CHUNKS_FILE = os.getenv("CHUNKS_FILE", "chunks.jsonl")
 
 
 def model_config(key: str | None = None) -> dict:
